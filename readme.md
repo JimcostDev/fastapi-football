@@ -1,4 +1,8 @@
-## Cómo probarlo
+# FastAPI Football API
+
+API básica desarrollada con FastAPI para obtener información sobre equipos de fútbol (nombre, liga y país). Este proyecto es ideal para aprender y practicar los fundamentos de FastAPI, incluyendo creación de endpoints, manejo de dependencias y uso de un servidor de desarrollo.
+
+## Instrucciones de Uso
 
 1. **Clona este repositorio** ejecutando el siguiente comando:
 
