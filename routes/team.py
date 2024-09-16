@@ -9,7 +9,8 @@ from fastapi import (
 # Importar la función para obtener la instancia de la base de datos
 from database.operations.team_db import (
     get_teams,
-    create_team)
+    create_team,
+    update_team)
 
 # Importar el modelo de datos TeamModel
 from database.models.team_model import TeamModel
@@ -51,10 +52,26 @@ async def create_team_endpoint(team_data: TeamModel):
     """
     try:
         created_team = create_team(team_data)
-        if not created_team:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="No se pudo crear el equipo")
-        return created_team
+        if create_team:
+            return created_team
     except Exception as ex:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al crear el equipo: {str(ex)}")
+
+
+# Definir ruta PUT para actualizar un equipo
+@router.put("/{team_id}",
+         tags=['teams'],
+         summary="Actualizar un equipo",
+         description="Actualiza un equipo existente en la base de datos.")
+async def update_team_endpoint(team_id: str, team_data: TeamModel):
+    """
+    Endpoint para actualizar un equipo existente.
+    """
+    try:
+        updated_team = update_team(team_id, team_data)
+        if updated_team:
+            return updated_team
+    except Exception as ex:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al actualizar el equipo: {str(ex)}")
