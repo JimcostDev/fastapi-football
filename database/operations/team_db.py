@@ -30,11 +30,9 @@ def get_teams(league_name: str = None) -> TeamModel:
              
             if teams:
                 return teams
-            else:
-                None
     except Exception as e:
         # Lanzar una excepción HTTP con código 500 si ocurre un error
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al obtener los equipos: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al obtener los equipos: {str(e)}")
     
 # Función para obtener un equipo por ID
 def get_team_by_id(team_id: str) -> TeamModel:
@@ -46,13 +44,27 @@ def get_team_by_id(team_id: str) -> TeamModel:
             
             # Buscar un equipo por su ID
             team = teams_collection.find_one({"_id": ObjectId(team_id)})
-            print(team)
             if team:
                 # Convertir '_id' en 'id' y mapear al modelo TeamModel
                 team = convert_object_id_to_str_single(team, TeamModel)
                 return team
-            else:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No se pudo encontrar el equipo con el ID {team_id}")
+    except Exception as e:
+        # Lanzar una excepción HTTP con código 500 si ocurre un error
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al obtener el equipo: {str(e)}")
+
+# Función para obtener un equipo por nombre
+def get_team_by_name(team_name: str) -> TeamModel:
+    try:
+        # Conectar a la base de datos usando un contexto 'with'
+        with get_database_instance() as db:
+            # Acceder a la colección de equipos
+            teams_collection = db.teams
+            
+            # Buscar un equipo por su nombre (ignorar mayúsculas y minúsculas)
+            team = teams_collection.find_one({"name": {"$regex": team_name, "$options": "i"}})
+            if team:
+                team = convert_object_id_to_str_single(team, TeamModel)
+                return team
     except Exception as e:
         # Lanzar una excepción HTTP con código 500 si ocurre un error
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al obtener el equipo: {str(e)}")
@@ -96,20 +108,15 @@ def update_team(team_id: str, team: TeamModel) -> TeamModel:
             team_dict = team.model_dump(exclude_unset=True) # Excluir los valores no establecidos
             
             existing_team = teams_collection.find_one({"_id": ObjectId(team_id)})
-            print(existing_team)
-            if existing_team is None:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No se pudo encontrar el equipo con el ID {team_id}")
-            
-            # Actualizar el equipo en la colección
-            result = teams_collection.update_one({"_id": ObjectId(team_id)}, {"$set": team_dict})
-            
-            if result.modified_count > 0 and result.matched_count > 0:
-                message = {"message": "Equipo actualizado exitosamente"}
-                return message 
-            else:
-                message = {"message": "No se pudo actualizar el equipo, no se encontraron cambios"}
-            
-            return team
+            if existing_team: 
+                # Actualizar el equipo en la colección
+                result = teams_collection.update_one({"_id": ObjectId(team_id)}, {"$set": team_dict})
+                if result.modified_count > 0 and result.matched_count > 0:
+                    message = {"message": "Equipo actualizado exitosamente"}
+                    return message 
+                else:
+                    message = {"message": "No se pudo actualizar el equipo, no se encontraron cambios"}
+                return team
     except ValidationError as e:
         # Lanzar una excepción HTTP con código 422 si hay errores de validación
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Error de validación: {str(e)}")
@@ -126,17 +133,12 @@ def delete_team(team_id: str):
             teams_collection = db.teams
             
             existing_team = teams_collection.find_one({"_id": ObjectId(team_id)})
-            if existing_team is None:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No se pudo encontrar el equipo con el ID {team_id}")
-            
-            # Eliminar el equipo de la colección
-            result = teams_collection.delete_one({"_id": ObjectId(team_id)})
-            
-            if result.deleted_count > 0:
-                message = {"message": "Equipo eliminado exitosamente"}
-                return message
-            else:
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"No se pudo eliminar el equipo con el ID {team_id}")
+            if existing_team:
+                # Eliminar el equipo de la colección
+                result = teams_collection.delete_one({"_id": ObjectId(team_id)})
+                if result.deleted_count > 0:
+                    message = {"message": "Equipo eliminado exitosamente"}
+                    return message
     except Exception as e:
         # Lanzar una excepción HTTP con código 500 si ocurre un error
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al eliminar el equipo: {str(e)}")

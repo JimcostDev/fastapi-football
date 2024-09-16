@@ -10,6 +10,7 @@ from fastapi import (
 from database.operations.team_db import (
     get_teams,
     get_team_by_id,
+    get_team_by_name,
     create_team,
     update_team,
     delete_team)
@@ -40,8 +41,7 @@ async def get_teams_endpoint(league_name: str = Query(None, description="Nombre 
         return teams
     
     except Exception as ex:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al obtener los equipos: {str(ex)}")
+        raise ex
         
 # Definir una ruta GET para obtener un equipo por ID
 @router.get("/{team_id}", 
@@ -55,11 +55,32 @@ async def get_team_by_id_endpoint(team_id: str):
     try:
         # Llama a la función get_team_by_id con el parámetro team_id
         team = get_team_by_id(team_id)
+        if team is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"No se pudo encontrar el equipo con el nombre {team_id}")
         return team
-    
     except Exception as ex:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al obtener el equipo: {str(ex)}")
+        raise ex
+        
+# Definir una ruta GET para obtener un equipo por nombre
+@router.get("/name/{team_name}",
+            tags=['teams'],
+            summary="Obtener un equipo por nombre",
+            description="Obtiene la información de un equipo por su nombre.")
+async def get_team_by_name_endpoint(team_name: str):
+    """
+    Endpoint para obtener un equipo por su nombre.
+    """
+    try:
+        # Llama a la función get_team_by_name con el parámetro team_name
+        team = get_team_by_name(team_name)
+        if team is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"No se pudo encontrar el equipo con el nombre {team_name}")
+        return team
+    except Exception as ex:
+        raise ex
+
         
 # Definir ruta POST para crear un nuevo equipo
 @router.post("/", 
@@ -75,8 +96,7 @@ async def create_team_endpoint(team_data: TeamModel):
         if create_team:
             return created_team
     except Exception as ex:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al crear el equipo: {str(ex)}")
+        raise ex
 
 
 # Definir ruta PUT para actualizar un equipo
@@ -90,11 +110,12 @@ async def update_team_endpoint(team_id: str, team_data: TeamModel):
     """
     try:
         updated_team = update_team(team_id, team_data)
-        if updated_team:
-            return updated_team
+        if updated_team in [None, False]:
+           raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"No se pudo encontrar el equipo con el ID {team_id}")
+        return updated_team   
     except Exception as ex:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al actualizar el equipo: {str(ex)}")
+        raise ex
 
 # Definir ruta DELETE para eliminar un equipo
 @router.delete("/{team_id}",
@@ -107,9 +128,10 @@ async def delete_team_endpoint(team_id: str):
     """
     try:
         deleted_team = delete_team(team_id)
-        if deleted_team:
-            return deleted_team
+        if deleted_team is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"No se pudo encontrar el equipo con el ID {team_id}")
+        return deleted_team
     except Exception as ex:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al eliminar el equipo: {str(ex)}")
+        raise ex
             
