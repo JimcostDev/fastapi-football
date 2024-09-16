@@ -11,7 +11,8 @@ from database.operations.team_db import (
     get_teams,
     get_team_by_id,
     create_team,
-    update_team)
+    update_team,
+    delete_team)
 
 # Importar el modelo de datos TeamModel
 from database.models.team_model import TeamModel
@@ -94,3 +95,21 @@ async def update_team_endpoint(team_id: str, team_data: TeamModel):
     except Exception as ex:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al actualizar el equipo: {str(ex)}")
+
+# Definir ruta DELETE para eliminar un equipo
+@router.delete("/{team_id}",
+         tags=['teams'],
+         summary="Eliminar un equipo",
+         description="Elimina un equipo de la base de datos.")
+async def delete_team_endpoint(team_id: str):
+    """
+    Endpoint para eliminar un equipo.
+    """
+    try:
+        deleted_team = delete_team(team_id)
+        if deleted_team:
+            return deleted_team
+    except Exception as ex:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al eliminar el equipo: {str(ex)}")
+            

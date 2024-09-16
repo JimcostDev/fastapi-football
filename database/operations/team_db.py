@@ -116,3 +116,27 @@ def update_team(team_id: str, team: TeamModel) -> TeamModel:
     except Exception as e:
         # Lanzar una excepción HTTP con código 500 si ocurre un error
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al actualizar el equipo: {str(e)}")
+    
+# Función para eliminar un equipo existente
+def delete_team(team_id: str):
+    try:
+        # Conectar a la base de datos usando un contexto 'with'
+        with get_database_instance() as db:
+            # Acceder a la colección de equipos
+            teams_collection = db.teams
+            
+            existing_team = teams_collection.find_one({"_id": ObjectId(team_id)})
+            if existing_team is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No se pudo encontrar el equipo con el ID {team_id}")
+            
+            # Eliminar el equipo de la colección
+            result = teams_collection.delete_one({"_id": ObjectId(team_id)})
+            
+            if result.deleted_count > 0:
+                message = {"message": "Equipo eliminado exitosamente"}
+                return message
+            else:
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"No se pudo eliminar el equipo con el ID {team_id}")
+    except Exception as e:
+        # Lanzar una excepción HTTP con código 500 si ocurre un error
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al eliminar el equipo: {str(e)}")
