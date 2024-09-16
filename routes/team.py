@@ -9,6 +9,7 @@ from fastapi import (
 # Importar la función para obtener la instancia de la base de datos
 from database.operations.team_db import (
     get_teams,
+    get_team_by_id,
     create_team,
     update_team)
 
@@ -40,6 +41,24 @@ async def get_teams_endpoint(league_name: str = Query(None, description="Nombre 
     except Exception as ex:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al obtener los equipos: {str(ex)}")
+        
+# Definir una ruta GET para obtener un equipo por ID
+@router.get("/{team_id}", 
+         tags=['teams'],
+         summary="Obtener un equipo por ID",
+         description="Obtiene la información de un equipo por su ID.")
+async def get_team_by_id_endpoint(team_id: str):
+    """
+    Endpoint para obtener un equipo por su ID.
+    """
+    try:
+        # Llama a la función get_team_by_id con el parámetro team_id
+        team = get_team_by_id(team_id)
+        return team
+    
+    except Exception as ex:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al obtener el equipo: {str(ex)}")
         
 # Definir ruta POST para crear un nuevo equipo
 @router.post("/", 

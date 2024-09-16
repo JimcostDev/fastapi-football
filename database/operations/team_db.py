@@ -3,7 +3,7 @@ from fastapi import HTTPException, status
 from pydantic import ValidationError
 from database.conn_db import get_database_instance
 from database.models.team_model import TeamModel
-from utils.utils import convert_object_id_to_str
+from utils.utils import convert_object_id_to_str_multi, convert_object_id_to_str_single
 
 
 # Función para obtener la lista de equipos
@@ -26,7 +26,7 @@ def get_teams(league_name: str = None) -> TeamModel:
             teams_list = list(teams_cursor)
             
             # Utilizar la función genérica para convertir '_id' en 'id' y mapear al modelo TeamModel
-            teams = convert_object_id_to_str(teams_list, TeamModel)
+            teams = convert_object_id_to_str_multi(teams_list, TeamModel)
              
             if teams:
                 return teams
@@ -35,6 +35,27 @@ def get_teams(league_name: str = None) -> TeamModel:
     except Exception as e:
         # Lanzar una excepción HTTP con código 500 si ocurre un error
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al obtener los equipos: {str(e)}")
+    
+# Función para obtener un equipo por ID
+def get_team_by_id(team_id: str) -> TeamModel:
+    try:
+        # Conectar a la base de datos usando un contexto 'with'
+        with get_database_instance() as db:
+            # Acceder a la colección de equipos
+            teams_collection = db.teams
+            
+            # Buscar un equipo por su ID
+            team = teams_collection.find_one({"_id": ObjectId(team_id)})
+            print(team)
+            if team:
+                # Convertir '_id' en 'id' y mapear al modelo TeamModel
+                team = convert_object_id_to_str_single(team, TeamModel)
+                return team
+            else:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No se pudo encontrar el equipo con el ID {team_id}")
+    except Exception as e:
+        # Lanzar una excepción HTTP con código 500 si ocurre un error
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al obtener el equipo: {str(e)}")
     
 
 # Función para crear un nuevo equipo
