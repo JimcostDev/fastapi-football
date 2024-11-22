@@ -2,7 +2,7 @@ from bson import ObjectId
 from fastapi import HTTPException, status
 from pydantic import ValidationError
 from database.conn_db import get_database_instance
-from database.models.team_model import TeamModel
+from database.models.team_model import TeamModel, TeamCreateUpdateModel
 from utils.utils import convert_object_id_to_str_multi, convert_object_id_to_str_single
 
 
@@ -17,7 +17,8 @@ def get_teams(league_name: str = None) -> TeamModel:
             # Definir un filtro para la liga 'Premier League' o vacío para obtener todos los equipos
             filter = {}
             if league_name:
-                filter = {"league": league_name}
+                # Usar la opción 'i' para ignorar mayúsculas y minúsculas
+                filter = {"league": {"$regex": league_name, "$options": "i"}} 
 
             # Ejecutar la consulta y ordenar los resultados por nombre (ascendente)
             teams_cursor  = teams_collection.find(filter).sort("name", 1)
@@ -71,7 +72,7 @@ def get_team_by_name(team_name: str) -> TeamModel:
     
 
 # Función para crear un nuevo equipo
-def create_team(team: TeamModel) -> TeamModel:
+def create_team(team: TeamCreateUpdateModel) -> TeamCreateUpdateModel:
     try:
         # Conectar a la base de datos usando un contexto 'with'
         with get_database_instance() as db:
@@ -97,7 +98,7 @@ def create_team(team: TeamModel) -> TeamModel:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al crear el equipo: {str(e)}")
     
 # Función para actualizar un equipo existente
-def update_team(team_id: str, team: TeamModel) -> TeamModel:
+def update_team(team_id: str, team: TeamCreateUpdateModel) -> TeamCreateUpdateModel:
     try:
         # Conectar a la base de datos usando un contexto 'with'
         with get_database_instance() as db:

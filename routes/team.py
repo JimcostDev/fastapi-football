@@ -16,7 +16,7 @@ from database.operations.team_db import (
     delete_team)
 
 # Importar el modelo de datos TeamModel
-from database.models.team_model import TeamModel
+from database.models.team_model import TeamModel, TeamCreateUpdateModel
 
 # Crear una instancia de la aplicación FastAPI
 router = APIRouter()
@@ -87,7 +87,7 @@ async def get_team_by_name_endpoint(team_name: str):
          tags=['teams'],
          summary="Crear un nuevo equipo",
          description="Crea un nuevo equipo en la base de datos.")
-async def create_team_endpoint(team_data: TeamModel):
+async def create_team_endpoint(team_data: TeamCreateUpdateModel):
     """
     Endpoint para crear un nuevo equipo.
     """
@@ -104,7 +104,7 @@ async def create_team_endpoint(team_data: TeamModel):
          tags=['teams'],
          summary="Actualizar un equipo",
          description="Actualiza un equipo existente en la base de datos.")
-async def update_team_endpoint(team_id: str, team_data: TeamModel):
+async def update_team_endpoint(team_id: str, team_data: TeamCreateUpdateModel):
     """
     Endpoint para actualizar un equipo existente.
     """

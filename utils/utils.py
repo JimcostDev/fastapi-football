@@ -8,7 +8,14 @@ def convert_object_id_to_str_multi(documents: list, model):
     :param model: Modelo Pydantic al cual mapear los documentos
     :return: Lista de instancias del modelo Pydantic
     """
-    return [model(**doc, id=str(doc['_id'])) for doc in documents if '_id' in doc]
+    # Convertimos '_id' en 'id' y lo pasamos al modelo
+    for doc in documents:
+        if '_id' in doc:
+            doc['id'] = str(doc['_id'])  # Convertir _id a id como string
+            del doc['_id']  # Eliminar el campo _id original
+    # Retornar una lista de instancias del modelo
+    return [model(**doc) for doc in documents if doc]
+
 
 
 # convertir _id en id de un solo documento
@@ -21,4 +28,8 @@ def convert_object_id_to_str_single(doc, model):
     :param model: Modelo Pydantic al cual mapear el documento
     :return: Instancia del modelo Pydantic
     """
-    return model(**doc, id=str(doc['_id'])) if '_id' in doc else None
+    if '_id' in doc:
+        doc['id'] = str(doc['_id'])  # Convertir _id a id como string
+        del doc['_id']  # Eliminar el campo _id
+    # Retornar la instancia del modelo
+    return model(**doc) if doc else None
